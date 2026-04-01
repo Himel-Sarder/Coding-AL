@@ -39,3 +39,4 @@ MAIN ENDP
 END MAIN            
 
 ; 'H' --> DL --> AH=02H --> INT 21H --> H printed --> AH=4CH --> INT 21H --> Exit
+; Copywrite 2026 Himel Sarder. Feel free to use and learn, but don’t forget to give credit.
