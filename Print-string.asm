@@ -2,8 +2,8 @@
 .STACK 100H
 
 .DATA
-    string DB 'Himel Sarder is a Noob Assembly Language Programmer$'    ; DB      --> define byte (1 byte per character)     
-                          ; 'Himel$'--> $ is string terminator for DOS AH=09H function
+    string DB 'Himel Sarder is a Noob Assembly Language Programmer$'    ; DB --> define byte (1 byte per character)     
+                                                                        ; $ --> string terminator for DOS AH=09H function
 
 .CODE  
 
