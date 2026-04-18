@@ -1,108 +1,101 @@
+; Write a program that will prompt the user to enter a hex digit character ("0"... "9" or "A"... "F"), display it on the next line in decimal, and ask the user if he or she wants to do it again. If the user types "y" or "Y", the program repeats; if the user types anything else, the program terminates. If the user enters an illegal character, prompt the user to try again.
+
 .MODEL SMALL
 .STACK 100H
 
 .DATA
-    PR1 DB 0DH,0AH,'ENTER A HEX DIGIT: $'
-    PR2 DB 0DH,0AH,'DO YOU WANT TO DO IT AGAIN? $'
-    PR3 DB 0DH,0AH,'ILLEGAL CHARACTER - ENTER 0..9 OR A..F: $'
-    PR4 DB 0DH,0AH,'IN DECIMAL IS IT: $'
+    MSG1 DB 0DH, 0AH, 'ENTER A HEX DIGIT: $'
+    MSG2 DB 0DH, 0AH, 'IN DECIMAL IT IS: $'
+    MSG3 DB 0DH, 0AH, 'DO YOU WANT TO DO IT AGAIN? $'
+    ERR  DB 0DH, 0AH, 'ILLEGAL CHARACTER - ENTER 0..9 OR A..F: $'
+    CHAR DB ?
 
 .CODE
 MAIN PROC
     MOV AX, @DATA
     MOV DS, AX
 
-START:
-    ; ---- INPUT ----
-    LEA DX, PR1
-    MOV AH, 09H
+START_PROG:
+    ; ১. প্রম্পট দেখানো
+    LEA DX, MSG1
+    MOV AH, 9
     INT 21H
 
-    MOV AH, 01H
+INPUT_LABEL:
+    ; ২. ইনপুট নেওয়া
+    MOV AH, 1
     INT 21H
+    MOV CHAR, AL
 
-    ; ---- lowercase to uppercase ----
-    CMP AL, 'a'
-    JL CHECK
-    CMP AL, 'f'
-    JG CHECK
-    SUB AL, 20H    
-
-CHECK:
-    ; ---- VALIDATION ----
+    ; ৩. ভ্যালিডেশন (০-৯ কি না)
     CMP AL, '0'
-    JL INVALID
+    JL ILLEGAL
     CMP AL, '9'
-    JLE CONVERT
+    JBE IS_DIGIT
 
+    ; ৪. ভ্যালিডেশন (A-F কি না)
     CMP AL, 'A'
-    JL INVALID
+    JL ILLEGAL
     CMP AL, 'F'
-    JG INVALID
+    JBE IS_HEX_UPPER
 
-CONVERT:
-    MOV BL, AL
+    ; ৫. ছোট হাতের a-f হ্যান্ডেল করা (অপশনাল কিন্তু ভালো)
+    CMP AL, 'a'
+    JL ILLEGAL
+    CMP AL, 'f'
+    JBE IS_HEX_LOWER
 
-    ; ---- HEX TO DECIMAL ----
-    CMP BL, '9'
-    JLE NUM
+ILLEGAL:
+    LEA DX, ERR
+    MOV AH, 9
+    INT 21H
+    JMP INPUT_LABEL
 
-    SUB BL, 'A'
-    ADD BL, 10
-    JMP PRINT
+IS_DIGIT:
+    LEA DX, MSG2
+    MOV AH, 9
+    INT 21H
+    MOV DL, CHAR
+    MOV AH, 2
+    INT 21H
+    JMP ASK_AGAIN
 
-NUM:
-    SUB BL, '0'
+IS_HEX_UPPER:
+    SUB CHAR, 11H ; ১০-১৫ ডেসিমেল দেখানোর লজিক
+    JMP PRINT_HEX
 
-PRINT:
-    LEA DX, PR4
-    MOV AH, 09H
+IS_HEX_LOWER:
+    SUB CHAR, 31H ; ছোট হাতের a-f এর জন্য
+
+PRINT_HEX:
+    LEA DX, MSG2
+    MOV AH, 9
+    INT 21H
+    
+    ; প্রথম ডিজিট '1' প্রিন্ট
+    MOV AH, 2
+    MOV DL, '1'
+    INT 21H
+    
+    ; দ্বিতীয় ডিজিট প্রিন্ট
+    MOV DL, CHAR
     INT 21H
 
-    MOV AL, BL
-    MOV AH, 0
-    MOV BL, 10
-    DIV BL
-
-    MOV BH, AH      ; remainder
-    MOV BL, AL      ; quotient
-
-    ; ---- print tens ----
-    CMP BL, 0
-    JE ONEDIGIT
-
-    ADD BL, 30H
-    MOV DL, BL
-    MOV AH, 02H
+ASK_AGAIN:
+    LEA DX, MSG3
+    MOV AH, 9
     INT 21H
-
-ONEDIGIT:
-    MOV DL, BH
-    ADD DL, 30H
-    MOV AH, 02H
+    
+    MOV AH, 1
     INT 21H
-
-    ; ---- AGAIN ----
-    LEA DX, PR2
-    MOV AH, 09H
-    INT 21H
-
-    MOV AH, 01H
-    INT 21H
-
-    CMP AL, 'Y'
-    JE START
+    
     CMP AL, 'y'
-    JE START
+    JE START_PROG
+    CMP AL, 'Y'
+    JE START_PROG
 
+    ; প্রোগ্রাম শেষ
     MOV AH, 4CH
     INT 21H
-
-INVALID:
-    LEA DX, PR3
-    MOV AH, 09H
-    INT 21H
-    JMP START
-
 MAIN ENDP
 END MAIN
