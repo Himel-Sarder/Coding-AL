@@ -1,52 +1,47 @@
+; Write a program to display the extended ASCII characters (ASCII codes 80h to FFh). Display 10 characters per line, separated by blanks. Stop after the extended characters have been displayed once.
+
 .MODEL SMALL
 .STACK 100H
 
 .DATA
-    SPACE DB ' $'
-    NEWLINE DB 0DH,0AH,'$'
+    CHAR_COUNT DB 0    ; প্রতি লাইনে কয়টি ক্যারেক্টার প্রিন্ট হলো তা গুনতে
 
 .CODE
 MAIN PROC
     MOV AX, @DATA
     MOV DS, AX
 
-    MOV BL, 80H      ; Starting ASCII
-    MOV CX, 0        ; Counter for 10 chars
+    MOV CX, 80H        ; CX রেজিস্টারে শুরুর ASCII কোড (80h) নিলাম
 
 PRINT_LOOP:
-
-    ; Print character
-    MOV DL, BL
-    MOV AH, 02H
+    ; ১. ক্যারেক্টার প্রিন্ট করা
+    MOV AH, 2
+    MOV DX, CX         ; CX এ থাকা ASCII কোডটি DL এ যাবে (DX এর নিচু অংশ)
     INT 21H
 
-    ; Print space
-    MOV AH, 09H
-    LEA DX, SPACE
+    ; ২. একটি স্পেস (Blank) প্রিন্ট করা
+    MOV DL, ' '
     INT 21H
 
-    INC BL           ; Next ASCII
-    INC CX           ; Count++
+    ; ৩. কাউন্টার বাড়ানো এবং চেক করা (১০টি হয়েছে কি না)
+    INC CHAR_COUNT
+    CMP CHAR_COUNT, 10
+    JNE NEXT_CHAR      ; ১০টি না হলে পরের ক্যারেক্টারে যাও
 
-    CMP CX, 10
-    JE NEW_LINE
-
-    CMP BL, 00H      ; after FF ? overflow --> 00
-    JNE PRINT_LOOP
-    JMP END_PROGRAM
-
-NEW_LINE:
-    MOV AH, 09H
-    LEA DX, NEWLINE
+    ; ৪. ১০টি হয়ে গেলে নতুন লাইনে যাওয়া
+    MOV DL, 0DH
     INT 21H
+    MOV DL, 0AH
+    INT 21H
+    MOV CHAR_COUNT, 0  ; কাউন্টার রিসেট করা
 
-    MOV CX, 0
-    CMP BL, 00H
-    JNE PRINT_LOOP
+NEXT_CHAR:
+    INC CX             ; পরবর্তী ASCII কোডে যাওয়া
+    CMP CX, 0FFH       ; FFh পর্যন্ত চেক করা
+    JBE PRINT_LOOP     ; যদি FFh এর সমান বা কম হয়, তবে লুপ চলবে
 
-END_PROGRAM:
+    ; প্রোগ্রাম শেষ
     MOV AH, 4CH
     INT 21H
-
 MAIN ENDP
 END MAIN
