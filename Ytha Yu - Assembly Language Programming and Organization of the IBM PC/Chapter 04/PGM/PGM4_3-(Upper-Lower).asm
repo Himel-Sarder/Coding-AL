@@ -1,0 +1,36 @@
+.MODEL SMALL
+.STACK 100H
+
+.DATA
+    PROMPT DB 'ENTER A UPPER CASE LETTER: $'
+    RESULT DB 0DH, 0AH, 'IN LOWER CASE: $'
+    CHAR   DB ?
+
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+    LEA DX, PROMPT
+    MOV AH, 9
+    INT 21H
+
+    MOV AH, 1
+    INT 21H
+    MOV CHAR, AL
+
+    ADD AL, 32 
+    MOV CHAR, AL
+
+    LEA DX, RESULT
+    MOV AH, 9
+    INT 21H
+
+    MOV DL, CHAR
+    MOV AH, 2
+    INT 21H
+
+    MOV AH, 4CH
+    INT 21H
+MAIN ENDP
+END MAIN
