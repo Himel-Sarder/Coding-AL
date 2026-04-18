@@ -1,56 +1,59 @@
+; Write a program to display a "?", read two capital letters, and display them on the next line in alphabetical order.
+
 .MODEL SMALL
 .STACK 100H
 
 .DATA
-    MSG DB '?$'
-    NL  DB 0DH,0AH,'$'
+    CHAR1 DB ?
+    CHAR2 DB ?
 
 .CODE
 MAIN PROC
+    ; ডাটা সেগমেন্ট ইনিশিয়ালাইজেশন
     MOV AX, @DATA
     MOV DS, AX
 
-    ; Show '?'
-    MOV AH, 09H
-    LEA DX, MSG
+    ; (a) "?" প্রদর্শন করা
+    MOV AH, 2
+    MOV DL, '?'
     INT 21H
 
-    ; Read first letter
-    MOV AH, 01H
+    ; (b) দুটি ক্যাপিটাল লেটার ইনপুট নেওয়া
+    MOV AH, 1
     INT 21H
-    MOV BL, AL
+    MOV CHAR1, AL   ; ১ম অক্ষর সেভ
 
-    ; Read second letter
-    MOV AH, 01H
     INT 21H
-    MOV BH, AL
+    MOV CHAR2, AL   ; ২য় অক্ষর সেভ
 
-    ; Compare
-    CMP BL, BH
-    JG SWAP        ; if BL > BH -> swap
+    ; (c) অ্যালফাবেটিক্যাল অর্ডারের জন্য তুলনা করা
+    MOV BL, CHAR1
+    MOV CL, CHAR2
 
-    JMP PRINT
+    CMP BL, CL      ; BL এবং CL তুলনা করি
+    JBE DISPLAY     ; যদি BL <= CL হয়, তবে সরাসরি ডিসপ্লেতে যাও (অর্ডার ঠিক আছে)
+    
+    ; যদি BL > CL হয়, তবে সোয়াপ (Swap) করি
+    XCHG BL, CL
 
-SWAP:
-    XCHG BL, BH    ; swap two letters
-
-PRINT:
-    ; New line
-    MOV AH, 09H
-    LEA DX, NL
+DISPLAY:
+    ; নতুন লাইনে যাওয়া
+    MOV AH, 2
+    MOV DL, 0DH
+    INT 21H
+    MOV DL, 0AH
     INT 21H
 
-    ; Print in order
+    ; ১ম অক্ষর প্রিন্ট (ছোটটি)
     MOV DL, BL
-    MOV AH, 02H
     INT 21H
 
-    MOV DL, BH
+    ; ২য় অক্ষর প্রিন্ট (বড়টি)
+    MOV DL, CL
     INT 21H
 
-    ; Exit
+    ; প্রোগ্রাম শেষ
     MOV AH, 4CH
     INT 21H
-
 MAIN ENDP
 END MAIN
